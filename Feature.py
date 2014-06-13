@@ -10,13 +10,31 @@ import featureFunction
 
 
 class FeatureSpace:
+    """
+    This Class is a wrapper class, to allow user select the category of features, or specify a list of features.
     
+    __init__ will take in a parameters of category and featureList. 
+    User could specify category, which will output all the features tag to this category.
+    User could only specify featureList, which will output all the features in the list.
+    User could specify category and featureList, which will output all the features in the category and List.
+    additional parameters are used for individual features. format is featurename = [parameters]
+    
+    usage:
+    data = np.random.randint(0,10000, 100000000)
+    a = FeatureSpace(category='all', automean=[0,0]) # automean is the featurename and [0,0] is the parameter for the feature
+    print a.featureList
+    a=a.calculateFeature(data)
+    print a.result(method='array')
+    print a.result(method='dict')
+
+    """
     def __init__(self, category=None, featureList=None, **kwargs):
         self.featureFunc = []
-
+        self.featureList=[]
+        
         if category is not None:
             self.category = category
-            self.featureList=[]
+            
             if self.category == 'all':
                 for name, obj in inspect.getmembers(featureFunction):
                     if inspect.isclass(obj) and name!='Base':
@@ -25,21 +43,40 @@ class FeatureSpace:
             else:
                 for name, obj in inspect.getmembers(featureFunction):
                     if inspect.isclass(obj) and name!='Base':
-                        if obj().category in self.category:
-                            self.featureList.append(name)
+                        if name in kwargs.keys():
+                            if obj( kwargs[name]).category in self.category:
+                                self.featureList.append(name)
                             
+                        else:
+                            if obj().category in self.category:
+                                self.featureList.append(name)
+            if featureList is not None:
+                for item in featureList:
+                    self.featureList.append(item)
+            
         else:
             self.featureList= featureList
             
-        self.featureFunc = []
         m = featureFunction
         
         for item in self.featureList:
             if item in kwargs.keys():
-                a = getattr(m, item)( kwargs[item])
+                try:
+                    a = getattr(m, item)( kwargs[item])
+                except:
+                    print "error in feature "+item
+                    sys.exit(1)
             else:
-                a = getattr(m, item)()
-            self.featureFunc.append(a.fit)
+                try:
+                    a = getattr(m, item)()
+                except:
+                    print " could not find feature " + item
+                    # discuss -- should we exit?
+                    sys.exit(1) 
+            try:
+                self.featureFunc.append(a.fit)
+            except:
+                print "could not initilize "+ item
 
 
             

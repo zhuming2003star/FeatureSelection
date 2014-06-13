@@ -29,8 +29,11 @@ class StestonK(Base):
 
 
 class automean(Base):
-    def __init__(self, length=10):	
+    def __init__(self, length):	
         self.category='basic'
+        if len(length)!=2:
+            print "need 2 parameters for feature automean"
+            sys.exit(1)
         self.length = length[0]
         self.length2 = length[1]
     def fit(self, data):
